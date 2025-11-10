@@ -99,8 +99,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BuffCopyConfig.cs" />
+    <Compile Include="BuffUtils.cs" />
     <Compile Include="ModBehaviour.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TagCollectionWrapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

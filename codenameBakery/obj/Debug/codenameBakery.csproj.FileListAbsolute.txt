@@ -126,6 +126,4 @@ C:\Users\Shinono\source\repos\codenameBakery\codenameBakery\bin\Debug\Unity.Prof
 C:\Users\Shinono\source\repos\codenameBakery\codenameBakery\obj\Debug\codename.5AC8D646.Up2Date
 C:\Users\Shinono\source\repos\codenameBakery\codenameBakery\obj\Debug\codenameBakery.dll
 C:\Users\Shinono\source\repos\codenameBakery\codenameBakery\obj\Debug\codenameBakery.pdb
-C:\Users\Shinono\source\repos\codenameBakery\codenameBakery\bin\Debug\0Harmony.dll
-C:\Users\Shinono\source\repos\codenameBakery\codenameBakery\bin\Debug\DuckovQol.dll
 C:\Users\Shinono\source\repos\codenameBakery\codenameBakery\bin\Debug\Razer.WyvrnSDK.Runtime.dll
