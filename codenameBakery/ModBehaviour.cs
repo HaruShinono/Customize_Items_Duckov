@@ -260,22 +260,32 @@ namespace codenameBakery
         {
             ModifierDescriptionCollection modifiers = item.GetComponentInChildren<ModifierDescriptionCollection>(true);
             if (modifiers == null) return;
+            if (config.Modifiers == null || config.Modifiers.Count == 0) return;
 
-            var processedKeys = new List<string>();
-            foreach (ModifierDescription mod in modifiers.ToList()) // ToList() allows modification during iteration
+            LogToFile($"Applying {config.Modifiers.Count} modifiers to '{config.LocalizationKey}'.", false);
+
+            var existingModifiers = modifiers.ToDictionary(mod => mod.Key, mod => mod);
+
+            foreach (var modEntry in config.Modifiers)
             {
-                if (mod != null && config.Modifiers.TryGetValue(mod.Key, out float newValue))
+                string key = modEntry.Key;
+                float value = modEntry.Value;
+
+                if (existingModifiers.TryGetValue(key, out ModifierDescription existingMod))
                 {
-                    SetPrivateFieldValue(mod, "value", newValue);
-                    processedKeys.Add(mod.Key);
+                    SetPrivateFieldValue(existingMod, "value", value);
                 }
-            }
-
-            foreach (var entry in config.Modifiers.Where(kvp => !processedKeys.Contains(kvp.Key)))
-            {
-                ModifierTarget target = GetModifierTarget(entry.Key);
-                var newMod = new ModifierDescription(target, entry.Key, 0, entry.Value, false, 0);
-                modifiers.Add(newMod);
+                else
+                {
+                    ModifierTarget target = GetModifierTarget(key);
+            
+                    // SỬA LỖI Ở ĐÂY:
+                    // 1. Luôn sử dụng ModifierType.Add (giá trị 0).
+                    // 2. Tham số thứ sáu phải là một số nguyên (int), không phải float.
+                    var newMod = new ModifierDescription(target, key, 0, value, false, 0); 
+                    modifiers.Add(newMod);
+                    LogToFile($"Added new modifier '{key}': {value} (Target: {target})", false);
+                }
             }
         }
         
@@ -289,9 +299,10 @@ namespace codenameBakery
                 LogToFile($"Base item for '{item.DisplayNameRaw}' is not a gun. Skipping weapon properties.", true);
                 return;
             }
-    
-            LogToFile($"Modifying existing weapon properties for '{item.DisplayNameRaw}'.", false);
 
+            LogToFile($"Applying weapon properties for '{item.DisplayNameRaw}'.", false);
+
+            // SỬA LỖI Ở ĐÂY: Quay lại sử dụng logic gán số nguyên (int)
             if (!string.IsNullOrEmpty(weaponConfig.Caliber))
                 SetPrivateFieldValue(gunSettings, "caliber", weaponConfig.Caliber);
 
@@ -300,7 +311,7 @@ namespace codenameBakery
 
             if (!string.IsNullOrEmpty(weaponConfig.TriggerMode))
             {
-                int triggerModeValue = 0;
+                int triggerModeValue = 0; // single / bolt
                 if (weaponConfig.TriggerMode.ToLower() == "burst") triggerModeValue = 1;
                 if (weaponConfig.TriggerMode.ToLower() == "auto") triggerModeValue = 2;
                 SetPrivateFieldValue(gunSettings, "triggerMode", triggerModeValue);
@@ -308,11 +319,12 @@ namespace codenameBakery
 
             if (!string.IsNullOrEmpty(weaponConfig.ReloadMode))
             {
-                int reloadModeValue = 0;
+                int reloadModeValue = 0; // magazine / fullMag
                 if (weaponConfig.ReloadMode.ToLower() == "perbullet") reloadModeValue = 1;
                 SetPrivateFieldValue(gunSettings, "reloadMode", reloadModeValue);
             }
-
+            
+            // Phần SetStatValue này đã chính xác và giữ nguyên
             SetStatValue(item, typeof(ItemAgent_Gun), "Damage", weaponConfig.DamageMultiplier, true);
             SetStatValue(item, typeof(ItemAgent_Gun), "Distance", weaponConfig.DistanceMultiplier, true);
             SetStatValue(item, typeof(ItemAgent_Gun), "bulletSpeed", weaponConfig.BulletSpeedMultiplier, true);

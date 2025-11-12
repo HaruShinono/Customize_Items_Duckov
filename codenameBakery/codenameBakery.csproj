@@ -105,5 +105,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TagCollectionWrapper.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="Note" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
