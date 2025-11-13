@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -132,7 +132,9 @@ namespace codenameBakery
                 // THAY ĐỔI DANH TÍNH VÀO GIÂY PHÚT CUỐI CÙNG
                 LogToFile($"Setting final typeID to {config.NewItemId} just before registration.", false);
                 SetPrivateFieldValue(component, "typeID", config.NewItemId);
-
+                
+                DeepDebugComponents(component, "FINAL STATE - BEFORE REGISTER");
+                
                 // ĐĂNG KÝ VẬT PHẨM VỚI DANH TÍNH MỚI
                 RegisterItem(component, config.NewItemId, gameObject);
 
@@ -552,15 +554,38 @@ namespace codenameBakery
             {
                 LogToFile($"\n--- DEEP DEBUG START: {item.name} at stage [{stage}] ---\n", false);
                 var allComponents = item.GetComponents<Component>();
-        
+                
                 foreach (var component in allComponents)
                 {
                     if (component == null) continue;
-            
+                    
                     Type componentType = component.GetType();
                     LogToFile($"[COMPONENT] ==> {componentType.FullName}", false);
 
-                    // Ghi lại tất cả các field
+                    // --- NÂNG CẤP ĐẶC BIỆT CHO ModifierDescriptionCollection ---
+                    if (component is ModifierDescriptionCollection modifierCollection)
+                    {
+                        LogToFile($"    (MODIFIER COLLECTION) Count: {modifierCollection.Count}", false);
+                        foreach (ModifierDescription mod in modifierCollection)
+                        {
+                            if (mod == null) continue;
+                            try
+                            {
+                                // SỬA LỖI Ở ĐÂY: Sử dụng Reflection để đọc các trường private
+                                var modValue = typeof(ModifierDescription).GetField("value", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(mod);
+                                var modTarget = typeof(ModifierDescription).GetField("target", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(mod);
+                                var modType = typeof(ModifierDescription).GetField("type", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(mod);
+
+                                LogToFile($"        -> Key: '{mod.Key}', Value: {modValue}, Target: {modTarget}, Type: {modType}", false);
+                            }
+                            catch (Exception ex)
+                            {
+                                LogToFile($"        -> FAILED to read modifier '{mod.Key}': {ex.Message}", true);
+                            }
+                        }
+                    }
+                    
+                    // Các field khác vẫn được ghi lại như cũ (không cần thay đổi phần này)
                     FieldInfo[] fields = componentType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
                     foreach (var field in fields)
                     {
@@ -569,20 +594,7 @@ namespace codenameBakery
                             object value = field.GetValue(component);
                             LogToFile($"    (Field) {field.Name}: {(value != null ? value.ToString() : "null")}", false);
                         }
-                        catch { /* Bỏ qua các field không thể đọc */ }
-                    }
-
-                    // Ghi lại tất cả các property
-                    PropertyInfo[] properties = componentType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
-                    foreach (var prop in properties)
-                    {
-                        if (!prop.CanRead || prop.GetIndexParameters().Length > 0) continue; // Bỏ qua các property không thể đọc hoặc là indexer
-                        try
-                        {
-                            object value = prop.GetValue(component, null);
-                            LogToFile($"    (Property) {prop.Name}: {(value != null ? value.ToString() : "null")}", false);
-                        }
-                        catch { /* Bỏ qua các property không thể đọc */ }
+                        catch { /* Bỏ qua */}
                     }
                 }
                 LogToFile($"\n--- DEEP DEBUG END: {item.name} at stage [{stage}] ---\n", false);
